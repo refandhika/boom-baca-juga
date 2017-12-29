@@ -1,0 +1,21 @@
+/* Styling for Baca Juga Box */
+
+.rec-article {
+	background: #eff0f1;
+	padding: 5px;
+}
+
+.rec-article>* {
+	padding: 5px;
+}
+
+.rec-article .rec-article-title {
+	color: #ff0000; 
+	font-weight: bold; 
+	font-size: 1.1em;
+}
+
+.rec-article .rec-article-cont {
+	font-size: 0.9em;
+	text-decoration: none;
+}
