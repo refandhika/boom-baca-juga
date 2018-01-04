@@ -1,18 +1,96 @@
 <?php
-/*
-Plugin Name: 	Boombastis - Baca Juga
-Plugin URI: 	https://www.boombastis.com
-Description: 	Boombastis "Baca Juga" section, adding box containing several link to other article inside post content.
-Version: 		1.0.0
-Author: 		Refa Andhika
-Author URI: 	https://www.boombastis.com
-License: 		Private
-License URI: 	https://www.boombastis.com
-
+/**
+* Plugin Name: 	Boombastis - Baca Juga
+* Plugin URI: 	https://www.boombastis.com
+* Description: 	Boombastis "Baca Juga" section, adding box containing several link to other article inside post content.
+* Version: 		1.0.1
+* Author: 		Refa Andhika
+* Author URI: 	https://www.boombastis.com
+* License: 		Private
+* License URI: 	https://www.boombastis.com
+*
 */
 
-/* Main Box Creator */
+/**
+* Init settings menu
+*/
+function bbjbox_setting_init() {
+	register_setting('general_bbjbox', 'bbjbox_options');
+
+	add_settings_section('bbjbox_first_section', 'Native Ads Setting', 'bbjbox_section_callback', 'general_bbjbox');
+
+	add_settings_field('bbjbox_native_ads', 'Native Ads Tags', 'bbjbox_na1_callback', 'general_bbjbox', 'bbjbox_first_section');
+	add_settings_field('bbjbox_native_script', 'Native Ads Scripts', 'bbjbox_na2_callback', 'general_bbjbox', 'bbjbox_first_section');
+}
+add_action( 'admin_init', 'bbjbox_setting_init' );
+
+function create_bbjbox_settings_page() {
+	$page_title = 'Boombastis - Baca Juga Setting';
+	$menu_title = 'Boom - Baca Juga';
+	$capability = 'manage_options';
+	$slug = 'bbjbox';
+	$callback = 'bbjbox_setting_page_content';
+
+	add_submenu_page('options-general.php', $page_title, $menu_title, $capability, $slug, $callback);
+}
+add_action( 'admin_menu', 'create_bbjbox_settings_page' );
+
+function bbjbox_setting_page_content() { 
+
+	if ( !current_user_can('manage_options') ) :
+		return;
+	endif;
+
+	if ( isset( $_GET['setting-updated'] ) ) :
+		add_settings_error( 'bbjbox_messages', 'bbjbox_messages', __( 'Setting Saved', 'general_bbjbox'), 'updated' );
+	endif;
+
+	settings_errors( 'bbjbox_messages' );
+	?>
+	<div class="wrap">
+		<h2>Boombastis - Baca Juga</h2>
+		<form action="options.php" method="post">
+			<?php 
+				settings_fields('general_bbjbox');
+				do_settings_sections('general_bbjbox');
+				submit_button('Save Settings');
+			?>
+		</form>
+	</div>
+<?php
+}
+
+function bbjbox_section_callback($args) {
+	switch ($args['id']) {
+		case 'bbjbox_first_section':
+			echo 'A box containing related article will be added automatically to your content.';
+			break;
+	}
+}
+
+function bbjbox_na1_callback($args) {
+	$options = get_option('bbjbox_options');
+	?>
+	<input name="bbjbox_options[bbjbox_native_ads]" id="bbjbox_native_ads" text="text" size="100" value="<?php echo isset( $options['bbjbox_native_ads'] ) ? esc_attr($options['bbjbox_native_ads']) : '';?>"/>
+	<?php 
+}
+
+function bbjbox_na2_callback($args) {
+	$options = get_option('bbjbox_options');
+	?>
+	<textarea name="bbjbox_options[bbjbox_native_scripts]" id="bbjbox_native_scripts" cols="100" rows="4"><?php echo isset( $options['bbjbox_native_scripts'] ) ? esc_attr($options['bbjbox_native_scripts']) : '';?></textarea>
+	<?php 
+}
+
+/**
+* Main Box Creator
+*
+* @param 	string 	$content 				Get from wordpress the_content.
+* @return 	string 							Modified content with related article box.
+*/
 function insert_boom_baca_juga_box($content){
+	$options = get_option('bbjbox_options');
+
 	$id_post = get_the_ID();
 
 	$args = array(
@@ -51,8 +129,8 @@ function insert_boom_baca_juga_box($content){
 
 	/* Wrap link inside Box */
 	$bacajugain='<div class="rec-article">
-			<div class="rec-article-title">Baca Juga</div>
-			<div data-advs-adspot-id="OTk5OjEzMTQ0" style="display:none"></div>'.
+			<div class="rec-article-title">Baca Juga</div>'.
+			$options['bbjbox_native_ads'].
 			$baca_juga_inlink.'
 		</div>';
 
@@ -90,12 +168,24 @@ function insert_boom_baca_juga_box($content){
 }
 add_filter('the_content', 'insert_boom_baca_juga_box', 10);
 
-/* Add individual styling for Baca Juga Box */
+/**
+* Add individual styling for Baca Juga Box
+*/
 function boom_baca_juga_css(){
 	$plugin_dir = plugin_dir_url( __FILE__ );
 
 	wp_enqueue_style('box_styling', $plugin_dir.'css/style.css');
 }
 add_action('wp_enqueue_scripts', 'boom_baca_juga_css');
+
+/**
+* Add custom native ads script to footer 
+*/
+function add_na_scripts_footer(){
+	$options = get_option('bbjbox_options');
+
+	echo $options['bbjbox_native_scripts'];
+}
+add_action('wp_footer', 'add_na_scripts_footer');
 
 /*EOF*/
