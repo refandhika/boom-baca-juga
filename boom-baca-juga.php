@@ -17,10 +17,15 @@
 function bbjbox_setting_init() {
 	register_setting('general_bbjbox', 'bbjbox_options');
 
-	add_settings_section('bbjbox_first_section', 'Native Ads Setting', 'bbjbox_section_callback', 'general_bbjbox');
+	add_settings_section('bbjbox_first_section', 'Desktop Native Ads Setting', 'bbjbox_desktop_callback', 'general_bbjbox');
 
-	add_settings_field('bbjbox_native_ads', 'Native Ads Tags', 'bbjbox_na1_callback', 'general_bbjbox', 'bbjbox_first_section');
-	add_settings_field('bbjbox_native_script', 'Native Ads Scripts', 'bbjbox_na2_callback', 'general_bbjbox', 'bbjbox_first_section');
+	add_settings_field('bbjbox_desktop_native_ads', 'Native Ads Tags', 'bbjbox_desktop1_callback', 'general_bbjbox', 'bbjbox_first_section');
+	add_settings_field('bbjbox_desktop_native_script', 'Native Ads Scripts', 'bbjbox_desktop2_callback', 'general_bbjbox', 'bbjbox_first_section');
+
+	add_settings_section('bbjbox_second_section', 'Mobile Native Ads Setting', 'bbjbox_mobile_callback', 'general_bbjbox');
+
+	add_settings_field('bbjbox_mobile_native_ads', 'Native Ads Tags', 'bbjbox_mobile1_callback', 'general_bbjbox', 'bbjbox_second_section');
+	add_settings_field('bbjbox_mobile_native_script', 'Native Ads Scripts', 'bbjbox_mobile2_callback', 'general_bbjbox', 'bbjbox_second_section');
 }
 add_action( 'admin_init', 'bbjbox_setting_init' );
 
@@ -49,6 +54,7 @@ function bbjbox_setting_page_content() {
 	?>
 	<div class="wrap">
 		<h2>Boombastis - Baca Juga</h2>
+		<p>A box containing related article will be added automatically to your content.</p>
 		<form action="options.php" method="post">
 			<?php 
 				settings_fields('general_bbjbox');
@@ -60,25 +66,55 @@ function bbjbox_setting_page_content() {
 <?php
 }
 
-function bbjbox_section_callback($args) {
+/**
+* Callback for desktop section
+*/
+
+function bbjbox_desktop_callback($args) {
 	switch ($args['id']) {
 		case 'bbjbox_first_section':
-			echo 'A box containing related article will be added automatically to your content.';
+			echo 'Add native ads for desktop view only.';
 			break;
 	}
 }
 
-function bbjbox_na1_callback($args) {
+function bbjbox_desktop1_callback($args) {
 	$options = get_option('bbjbox_options');
 	?>
-	<input name="bbjbox_options[bbjbox_native_ads]" id="bbjbox_native_ads" text="text" size="100" value="<?php echo isset( $options['bbjbox_native_ads'] ) ? esc_attr($options['bbjbox_native_ads']) : '';?>"/>
+	<input name="bbjbox_options[bbjbox_desktop_ads]" id="bbjbox_desktop_ads" text="text" size="100" value="<?php echo isset( $options['bbjbox_desktop_ads'] ) ? esc_attr($options['bbjbox_desktop_ads']) : '';?>"/>
 	<?php 
 }
 
-function bbjbox_na2_callback($args) {
+function bbjbox_desktop2_callback($args) {
 	$options = get_option('bbjbox_options');
 	?>
-	<textarea name="bbjbox_options[bbjbox_native_scripts]" id="bbjbox_native_scripts" cols="100" rows="4"><?php echo isset( $options['bbjbox_native_scripts'] ) ? esc_attr($options['bbjbox_native_scripts']) : '';?></textarea>
+	<textarea name="bbjbox_options[bbjbox_desktop_scripts]" id="bbjbox_desktop_scripts" cols="100" rows="4"><?php echo isset( $options['bbjbox_desktop_scripts'] ) ? esc_attr($options['bbjbox_desktop_scripts']) : '';?></textarea>
+	<?php 
+}
+
+/**
+* Callback for mobile section
+*/
+
+function bbjbox_mobile_callback($args) {
+	switch ($args['id']) {
+		case 'bbjbox_second_section':
+			echo 'Add native ads for mobile view only.';
+			break;
+	}
+}
+
+function bbjbox_mobile1_callback($args) {
+	$options = get_option('bbjbox_options');
+	?>
+	<input name="bbjbox_options[bbjbox_mobile_ads]" id="bbjbox_mobile_ads" text="text" size="100" value="<?php echo isset( $options['bbjbox_mobile_ads'] ) ? esc_attr($options['bbjbox_mobile_ads']) : '';?>"/>
+	<?php 
+}
+
+function bbjbox_mobile2_callback($args) {
+	$options = get_option('bbjbox_options');
+	?>
+	<textarea name="bbjbox_options[bbjbox_mobile_scripts]" id="bbjbox_mobile_scripts" cols="100" rows="4"><?php echo isset( $options['bbjbox_mobile_scripts'] ) ? esc_attr($options['bbjbox_mobile_scripts']) : '';?></textarea>
 	<?php 
 }
 
@@ -90,7 +126,7 @@ function bbjbox_na2_callback($args) {
 */
 function insert_boom_baca_juga_box($content){
 	$options = get_option('bbjbox_options');
-
+	
 	$id_post = get_the_ID();
 
 	$args = array(
@@ -127,10 +163,16 @@ function insert_boom_baca_juga_box($content){
 		}
 	}
 
+	if ( wp_is_mobile() ) :
+		$ads=$options['bbjbox_mobile_ads'];
+	else :
+		$ads=$options['bbjbox_desktop_ads'];
+	endif;
+
 	/* Wrap link inside Box */
 	$bacajugain='<div class="rec-article">
 			<div class="rec-article-title">Baca Juga</div>'.
-			$options['bbjbox_native_ads'].
+			$ads.
 			$baca_juga_inlink.'
 		</div>';
 
@@ -183,8 +225,12 @@ add_action('wp_enqueue_scripts', 'boom_baca_juga_css');
 */
 function add_na_scripts_footer(){
 	$options = get_option('bbjbox_options');
-
-	echo $options['bbjbox_native_scripts'];
+	
+	if ( wp_is_mobile() ):
+		echo $options['bbjbox_mobile_scripts'];
+	else :
+		echo $options['bbjbox_desktop_scripts'];
+	endif;
 }
 add_action('wp_footer', 'add_na_scripts_footer');
 
