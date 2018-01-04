@@ -3,7 +3,7 @@
 * Plugin Name: 	Boombastis - Baca Juga
 * Plugin URI: 	https://www.boombastis.com
 * Description: 	Boombastis "Baca Juga" section, adding box containing several link to other article inside post content.
-* Version: 		1.0.1
+* Version: 		1.0.2
 * Author: 		Refa Andhika
 * Author URI: 	https://www.boombastis.com
 * License: 		Private
