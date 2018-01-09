@@ -1,4 +1,6 @@
-/* Styling for Baca Juga Box */
+/**
+* Styling for Baca Juga Box
+*/
 
 .rec-article {
 	background: #eff0f1;
@@ -18,4 +20,9 @@
 .rec-article .rec-article-cont {
 	font-size: 0.9em;
 	text-decoration: none;
+}
+
+.rec-article .ajudul {
+	font-family: 'Gotham';
+	font-weight: normal;
 }
