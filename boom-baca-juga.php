@@ -3,7 +3,7 @@
 * Plugin Name: 	Boombastis - Baca Juga
 * Plugin URI: 	https://www.boombastis.com
 * Description: 	Boombastis "Baca Juga" section, adding box containing several link to other article inside post content.
-* Version: 		1.0.2
+* Version: 		1.0.3
 * Author: 		Refa Andhika
 * Author URI: 	https://www.boombastis.com
 * License: 		Private
@@ -125,90 +125,103 @@ function bbjbox_mobile2_callback($args) {
 * @return 	string 							Modified content with related article box.
 */
 function insert_boom_baca_juga_box($content){
-	$options = get_option('bbjbox_options');
-	
-	$id_post = get_the_ID();
+	global $post;
 
-	$args = array(
-		'posts_per_page'   => 7,
-		'offset'           => 0,
-		'category'         => 0,
-		'category_name'    => '',
-		'orderby'          => 'date',
-		'order'            => 'DESC',
-		'include'          => '',
-		'exclude'          => '',
-		'meta_key'         => '',
-		'meta_value'       => '',
-		'post_type'        => 'post',
-		'post_mime_type'   => '',
-		'post_parent'      => '',
-		'author'	       => '',
-		'author_name'	   => '',
-		'post_status'      => 'publish',
-		'suppress_filters' => true 
-	);
-	$posts_array = get_posts($args);
+	if ( $post->post_type == 'post' ) :
 
-	$i=1;
-	$baca_juga_inlink='';
-	/* Get Two Latest Article */
-	foreach ($posts_array as $key => $value) {
-		if($id_post!=$value->ID){
-			$baca_juga_inlink=$baca_juga_inlink.'<div class="rec-article-cont">
-				<a class="ajudul" href="'.get_permalink($value->ID).'">'.get_the_title($value->ID).'</a>
-			</div>';
-			$i++;
-			if($i==3) {break;}
-		}
-	}
+		$options = get_option('bbjbox_options');	
+		$id_post = get_the_ID();
 
-	if ( wp_is_mobile() ) :
-		$ads=$options['bbjbox_mobile_ads'];
-	else :
-		$ads=$options['bbjbox_desktop_ads'];
-	endif;
+		$args = array(
+			'posts_per_page'   => 7,
+			'offset'           => 0,
+			'category'         => 0,
+			'category_name'    => '',
+			'orderby'          => 'date',
+			'order'            => 'DESC',
+			'include'          => '',
+			'exclude'          => '',
+			'meta_key'         => '',
+			'meta_value'       => '',
+			'post_type'        => 'post',
+			'post_mime_type'   => '',
+			'post_parent'      => '',
+			'author'	       => '',
+			'author_name'	   => '',
+			'post_status'      => 'publish',
+			'suppress_filters' => true 
+		);
+		$posts_array = get_posts($args);
 
-	/* Wrap link inside Box */
-	$bacajugain='<div class="rec-article">
-			<div class="rec-article-title">Baca Juga</div>'.
-			$ads.
-			$baca_juga_inlink.'
-		</div>';
-
-	/* Split content by paragraph for insertion */
-	$paragraph = explode('</p>', $content);
-
-	/* Handle Blockquotes Interaction */
-	/* 'bqflag' is marking whether content has blockquotes or no */
-	$bqflag = false;
-	/* 'pc' is paragraph count */
-	$pc=0;
-	for ($i=0;$i<count($paragraph);$i++){
-		if (strpos($paragraph[$i], '<blockquote') !== false) {
-			$bqflag = true;
-		}
-		if ($bqflag === false){
-			switch ($pc) {
-				case 1:
-					$paragraph[$i] = $paragraph[$i].$bacajugain;
-					break;
-			 	default:
-			 		break;
+		$i=1;
+		$baca_juga_inlink='';
+		/* Get Two Latest Article */
+		foreach ($posts_array as $key => $value) {
+			if($id_post!=$value->ID){
+				$baca_juga_inlink=$baca_juga_inlink.'<div class="rec-article-cont">
+					<a class="ajudul" href="'.get_permalink($value->ID).'">'.get_the_title($value->ID).'</a>
+				</div>';
+				$i++;
+				if($i==3) {break;}
 			}
-			$pc++;
 		}
-		if (strpos($paragraph[$i], '</blockquote') !== false) {
-			$bqflag = false;
-		}
-	}
 
-	/* Merge content back */
-	$content=implode('</p>', $paragraph);
+		if ( wp_is_mobile() ) :
+			$ads=$options['bbjbox_mobile_ads'];
+		else :
+			$ads=$options['bbjbox_desktop_ads'];
+		endif;
+
+		/* Wrap link inside Box */
+		$bacajugain='<div class="rec-article">
+				<div class="rec-article-title">Baca Juga</div>'.
+				$ads.
+				$baca_juga_inlink.'
+			</div>';
+
+		/* Split content by paragraph for insertion */
+		$paragraph = explode('</p>', wpautop($content));
+
+		/* Handle Blockquotes Interaction */
+		/* 'bqflag' is marking whether content has blockquotes or no */
+		$bqflag = false;
+		/* 'pc' is paragraph count */
+		$pc=0;
+		for ($i=0;$i<count($paragraph);$i++){
+			if (strpos($paragraph[$i], '<blockquote') !== false) {
+				$bqflag = true;
+			}
+			if ($bqflag === false){
+				switch ($pc) {
+					case 1:
+						$paragraph[$i] = $paragraph[$i].$bacajugain;
+						break;
+				 	default:
+				 		break;
+				}
+				$pc++;
+			}
+			if (strpos($paragraph[$i], '</blockquote') !== false) {
+				$bqflag = false;
+			}
+		}
+
+		/* Merge content back */
+		$content=implode('</p>', $paragraph);
+	endif;
 
 	return $content;
 }
-add_filter('the_content', 'insert_boom_baca_juga_box', 10);
+add_action('loop_start', function( WP_Query $query ) {
+	if ( $query->is_main_query() ) {
+		add_filter('the_content', 'insert_boom_baca_juga_box', -10);
+	}
+});
+add_action('loop_end', function( WP_Query $query ) {
+	if ( has_filter('the_content', 'insert_boom_baca_juga_box') ) {
+		remove_filter('the_content', 'insert_boom_baca_juga_box', -10);
+	}
+});
 
 /**
 * Add individual styling for Baca Juga Box
